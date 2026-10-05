@@ -6,6 +6,7 @@
 import java.io.* ;
 import java.net.* ;
 import java.util.* ;
+import webserver.FtpClient;
 
 public final class WebServer
 {
@@ -99,15 +100,28 @@ final class HttpRequest implements Runnable
     String statusLine = null;
     String contentTypeLine = null;
     String entityBody = null;
+    long contentLength = 0;
     if (fileExists) {
-      statusLine = "200 OK"+ CRLF;
+      statusLine = "HTTP/1.1 200 OK" + CRLF;
       contentTypeLine = "Content-type: " + contentType( fileName ) + CRLF;
+      contentLength = new File(fileName).length();
     } else {
-      statusLine = "404 Not Found" + CRLF;
-      contentTypeLine = "Content-type: text/html" + CRLF;
       entityBody = "<HTML>" +
                     "<HEAD><TITLE>Not Found</TITLE></HEAD>" +
                     "<BODY>Not Found</BODY></HTML>";
+      statusLine = "HTTP/1.1 404 Not Found" + CRLF;
+      contentTypeLine = "Content-type: text/html" + CRLF;
+      contentLength = entityBody.length();
+
+      // Initiate FTP connection
+      FtpClient ftpClient = new FtpClient();
+      ftpClient.connect("dmartz", "computer-networks");
+
+      // Retrieve file from FTP server
+      ftpClient.getFile(fileName);
+
+      // Disconnect from the server
+      ftpClient.disconnect();
     }
 
     printResponse(statusLine, contentTypeLine, entityBody);
@@ -117,6 +131,12 @@ final class HttpRequest implements Runnable
 
     // Send the content type line.
     os.writeBytes(contentTypeLine);
+
+    // Send the content length.
+    os.writeBytes("Content-Length: " + contentLength + CRLF);
+
+    // Tell the client we're closing the connection after this response.
+    os.writeBytes("Connection: close" + CRLF);
 
     // Send a blank line to indicate the end of the header lines.
     os.writeBytes(CRLF);
@@ -147,13 +167,13 @@ final class HttpRequest implements Runnable
   }
 
   private static String contentType(String fileName) {
-    if(fileName.endsWith(".htm") || fileName.endsWith(".html")) {
+    if(fileName.toLowerCase().endsWith(".htm") || fileName.toLowerCase().endsWith(".html")) {
       return "text/html";
     }
-    if(fileName.endsWith(".gif")) {
+    if(fileName.toLowerCase().endsWith(".gif")) {
       return "image/gif";
     }
-    if(fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+    if(fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".jpeg")) {
       return "image/jpeg";
     }
     return "application/octet-stream";

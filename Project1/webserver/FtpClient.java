@@ -17,7 +17,7 @@ import java.util.regex.*;
 public class FtpClient {
 
     final static String CRLF = "\r\n";
-    private boolean DEBUG = false;		// Debug Flag
+    private boolean DEBUG = true;		// Debug Flag
     private Socket controlSocket = null;
     private BufferedReader controlReader = null;
     private DataOutputStream controlWriter = null;
@@ -37,18 +37,20 @@ public class FtpClient {
     public void connect(String username, String password) {
         try {
             // establish the control socket
-            ?
+            controlSocket = new Socket("localhost", 21);
 
             // get references to the socket input and output streams
-            ?
+            controlReader = new BufferedReader(new InputStreamReader(controlSocket.getInputStream()));
+            controlWriter = new DataOutputStream(controlSocket.getOutputStream());
 
             // check if the initial connection response code is OK
-            if (checkResponse(?)) {
+            if (checkResponse(220)) {
                 System.out.println("Succesfully connected to FTP server");
             }
 
             // send user name and password to ftp server
-            ?
+            sendCommand("USER " + username + CRLF, 331);
+            sendCommand("PASS " + password + CRLF, 230);
 
         } catch (UnknownHostException ex) {
             System.out.println("UnknownHostException: " + ex);
@@ -62,27 +64,30 @@ public class FtpClient {
      * @param file_name: the name of the file to retrieve
      */
     public void getFile(String file_name) {
-	int data_port = 0; // initialize the data port        
+	int data_port;     
 	try {
             // change to current (root) directory first
-            sendCommand(?);
+            sendCommand("CWD /" + CRLF, 250);
 
             // set to passive mode and retrieve the data port number from response
-            currentResponse = sendCommand(?);
-            data_port = ?;
+            currentResponse = sendCommand("PASV" + CRLF, 227);
+            data_port = extractDataPort(currentResponse);
 
             // connect to the data port 
-            Socket data_socket = ?
-            DataInputStream data_reader = ?
+            try (Socket data_socket = new Socket("localhost", data_port);
+                 DataInputStream data_reader = new DataInputStream(data_socket.getInputStream())) {
 
-            // download file from ftp server
-            ?
+                // download file from ftp server
+                sendCommand("RETR " + file_name + CRLF, 150);
 
-            // check if the transfer was succesful
-            ?
+                // check if the transfer was succesful
+                if (checkResponse(226)) {
+                    System.out.println("File transfer successful");
+                }
 
-            // Write data on a local file
-            createLocalFile(data_reader, file_name);
+                // Write data on a local file
+                createLocalFile(data_reader, file_name);
+            }
 
         } catch (UnknownHostException ex) {
             System.out.println("UnknownHostException: " + ex);
