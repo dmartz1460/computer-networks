@@ -5,6 +5,18 @@
   </head>
   <body>
     <h1>Web Client Output</h1>
-    <a href="/text.txt">Downloaded text file</a>
+
+    <!-- The container where the text will appear -->
+    <pre id="text-container" style="color: black;"></pre>
+    <script>
+      // Point this to the path of your text file
+      fetch('/text.txt')
+        .then(response => response.text())
+        .then(text => {
+          // Use innerText to safely display the text without rendering any accidental HTML
+          document.getElementById('text-container').innerText = text;
+        })
+        .catch(error => console.error('Error loading the text file:', error));
+    </script>
   </body>
 </html>

@@ -1,9 +1,3 @@
-package webserver;
-
-import java.io.*;
-import java.net.*;
-import java.util.regex.*;
-
 /**
  *
  * This is the main FTP client. Study the code and figure out what 
@@ -13,6 +7,12 @@ import java.util.regex.*;
  * @author Giovani
  * 
  */
+
+package webserver;
+
+import java.io.*;
+import java.net.*;
+import java.util.regex.*;
 
 public class FtpClient {
 

@@ -3,10 +3,11 @@
 * Dylan Martz
 **/
 
+package webserver;
+
 import java.io.* ;
 import java.net.* ;
 import java.util.* ;
-import webserver.FtpClient;
 
 public final class WebServer
 {
@@ -103,25 +104,37 @@ final class HttpRequest implements Runnable
     long contentLength = 0;
     if (fileExists) {
       statusLine = "HTTP/1.1 200 OK" + CRLF;
-      contentTypeLine = "Content-type: " + contentType( fileName ) + CRLF;
+      contentTypeLine = "Content-type: " + contentType(fileName) + CRLF;
       contentLength = new File(fileName).length();
     } else {
-      entityBody = "<HTML>" +
-                    "<HEAD><TITLE>Not Found</TITLE></HEAD>" +
-                    "<BODY>Not Found</BODY></HTML>";
-      statusLine = "HTTP/1.1 404 Not Found" + CRLF;
-      contentTypeLine = "Content-type: text/html" + CRLF;
-      contentLength = entityBody.length();
+      // If the file requested is any type other than a text (.txt) file, report
+      // error to the web client
+      if (!contentType(fileName).equalsIgnoreCase("text/plain")) {
+        statusLine = "HTTP/1.1 404 Not Found" + CRLF;
+        contentTypeLine = "Content-type: text/html" + CRLF;
+        entityBody = "<HTML>" +
+        "<HEAD><TITLE>Not Found</TITLE></HEAD>" +
+        "<BODY>Not Found</BODY></HTML>";
+      } else { // Retrieve the text (.txt) file from your local FTP server
+        statusLine = "HTTP/1.1 200 OK" + CRLF;
+        contentTypeLine = "Content-type: text/plain" + CRLF;
 
-      // Initiate FTP connection
-      FtpClient ftpClient = new FtpClient();
-      ftpClient.connect("dmartz", "computer-networks");
+        // Create an instance of ftp client
+        FtpClient ftpClient = new FtpClient();
 
-      // Retrieve file from FTP server
-      ftpClient.getFile(fileName);
+        // Connect to the ftp server
+        ftpClient.connect("dmartz", "computer-networks");    
 
-      // Disconnect from the server
-      ftpClient.disconnect();
+        // Retrieve the file from the FTP server
+        ftpClient.getFile(fileName);
+
+        // Disconnect from ftp server
+        ftpClient.disconnect();
+
+        // Assign input stream to read the recently ftp-downloaded file
+        fis = new FileInputStream(fileName);
+        contentLength = new File(fileName).length();
+      }
     }
 
     printResponse(statusLine, contentTypeLine, entityBody);
@@ -146,7 +159,11 @@ final class HttpRequest implements Runnable
       sendBytes(fis, os);
       fis.close();
     } else {
-      os.writeBytes(entityBody);
+      if (!contentType(fileName).equalsIgnoreCase("text/plain")) {
+        os.writeBytes(entityBody);
+      } else {
+        sendBytes(fis, os);
+      }
     }
 
     // Close the streams and socket
@@ -175,6 +192,9 @@ final class HttpRequest implements Runnable
     }
     if(fileName.toLowerCase().endsWith(".jpg") || fileName.toLowerCase().endsWith(".jpeg")) {
       return "image/jpeg";
+    }
+    if(fileName.toLowerCase().endsWith(".txt")) {
+      return "text/plain";
     }
     return "application/octet-stream";
   }
