@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<html>
+<!DOCTYPE HTML>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Client Output</title>
   </head>
   <body>
@@ -8,6 +11,8 @@
 
     <!-- The container where the text will appear -->
     <pre id="text-container" style="color: black;"></pre>
+    <a id="image-container"></a>
+    <a id="gif-container"></a>
     <script>
       // Point this to the path of your text file
       fetch('/text.txt')
@@ -17,6 +22,28 @@
           document.getElementById('text-container').innerText = text;
         })
         .catch(error => console.error('Error loading the text file:', error));
+
+      // Point this to the path of your image file
+      fetch('/image1.jpg')
+        .then(response => response.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          const img = document.createElement('img');
+          img.src = url;
+          document.getElementById('image-container').appendChild(img);
+        })
+        .catch(error => console.error('Error loading the image file:', error));
+
+      // Point this to the path of your GIF file
+      fetch('/click.gif')
+        .then(response => response.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          const img = document.createElement('img');
+          img.src = url;
+          document.getElementById('gif-container').appendChild(img);
+        })
+        .catch(error => console.error('Error loading the GIF file:', error));
     </script>
   </body>
 </html>

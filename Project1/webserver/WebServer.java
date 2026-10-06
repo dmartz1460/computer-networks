@@ -50,6 +50,8 @@ final class HttpRequest implements Runnable
   {
     try {
       processRequest();
+    } catch (SocketException e) {
+      // Browser closed the connection early — this is normal
     } catch (Exception e) {
       System.out.println(e);
     }
@@ -115,6 +117,7 @@ final class HttpRequest implements Runnable
         entityBody = "<HTML>" +
         "<HEAD><TITLE>Not Found</TITLE></HEAD>" +
         "<BODY>Not Found</BODY></HTML>";
+        contentLength = entityBody.length();
       } else { // Retrieve the text (.txt) file from your local FTP server
         statusLine = "HTTP/1.1 200 OK" + CRLF;
         contentTypeLine = "Content-type: text/plain" + CRLF;
@@ -167,7 +170,10 @@ final class HttpRequest implements Runnable
     }
 
     // Close the streams and socket
-    os.close();
+    try {
+      os.close();
+    } catch (SocketException e) {
+    }
     br.close();
     socket.close();
   }
