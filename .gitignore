@@ -1,2 +1,7 @@
 # Compiled Java class files
 *.class
+
+# Generated build and Python cache files
+build/
+__pycache__/
+*.pyc
