@@ -6,7 +6,7 @@ Dylan Martz
 ## Overview
 
 This project is a console bulletin board with a Java TCP server and a Python
-TCP client. It supports a public board and five private group boards:
+TCP client. The server supports a public board and five private group boards:
 `general`, `sports`, `study`, `gaming`, and `tech`.
 
 The server and client use only their language standard libraries. Communication
@@ -84,6 +84,9 @@ Run all tests with:
 py -m unittest discover -s test -p "test_*.py"
 ```
 
-## Known issues
+## Server implementation
 
-Document any limitations discovered during testing here.
+The server keeps board state in memory and supports registration, public and
+private membership, message posting and lookup, user lists, join/leave events,
+duplicate-name rejection, private-board isolation, and disconnect cleanup.
+Message IDs are unique for the lifetime of the server process.
