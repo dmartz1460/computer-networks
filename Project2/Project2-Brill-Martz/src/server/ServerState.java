@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.IOException;
 
 /** Shared in-memory state. Callers hold this object's monitor for every mutation and notification. */
 public final class ServerState {
@@ -112,5 +113,20 @@ public final class ServerState {
         session.privateBoards().clear();
         session.markDisconnected();
         sessions.remove(session);
+    }
+
+    public synchronized void removeFromBoard(Session session, Board board) {
+        leave(session, board);
+    }
+
+    public synchronized void closeSessions() {
+        for (Session session : new ArrayList<>(sessions.keySet())) {
+            try {
+                session.socket().close();
+            } catch (IOException exception) {
+                System.err.println("Unable to close client connection: " + exception.getMessage());
+            }
+            disconnect(session);
+        }
     }
 }

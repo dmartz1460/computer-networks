@@ -206,8 +206,11 @@ public final class ClientHandler extends Thread {
             sendError(requestId, "NOT_REGISTERED", "Register before disconnecting");
             return;
         }
-        sendResponse(requestId, true, Protocol.object("\"username\":" + Protocol.quote(session.username())));
-        cleanup();
+        synchronized (state) {
+            removeMembershipsAndNotify();
+            sendResponse(requestId, true, leaveResponse(state.publicBoard()));
+            state.disconnect(session);
+        }
     }
 
     private void joinBoard(Board board, String requestId, String eventType) throws IOException {
@@ -220,7 +223,7 @@ public final class ClientHandler extends Thread {
             state.join(session, board);
             String snapshot = joinSnapshot(board);
             sendResponse(requestId, true, snapshot);
-            notifyMembers(previousMembers, Protocol.event(joinEvent(eventType, board)));
+            notifyMembers(board, previousMembers, Protocol.event(joinEvent(eventType, board)));
         }
     }
 
@@ -232,7 +235,7 @@ public final class ClientHandler extends Thread {
             }
             state.leave(session, board);
             sendResponse(requestId, true, leaveResponse(board));
-            notifyMembers(board.memberSnapshot(), Protocol.event(memberEvent(eventType, board)));
+            notifyMembers(board, board.memberSnapshot(), Protocol.event(memberEvent(eventType, board)));
         }
     }
 
@@ -261,7 +264,9 @@ public final class ClientHandler extends Thread {
                     + ",\"sender\":" + Protocol.quote(message.sender())
                     + ",\"subject\":" + Protocol.quote(message.subject())
                     + ",\"postDate\":" + Protocol.quote(message.postDate())));
-            notifyMembers(board.memberSnapshot(), event);
+            List<Session> otherMembers = board.memberSnapshot();
+            otherMembers.remove(session);
+            notifyMembers(board, otherMembers, event);
         }
     }
 
@@ -324,11 +329,12 @@ public final class ClientHandler extends Thread {
                 + ",\"users\":" + Protocol.userNames(board));
     }
 
-    private void notifyMembers(List<Session> recipients, String event) {
+    private void notifyMembers(Board board, List<Session> recipients, String event) {
         for (Session recipient : new ArrayList<>(recipients)) {
             try {
                 recipient.send(event);
             } catch (IOException exception) {
+                state.removeFromBoard(recipient, board);
                 try {
                     recipient.socket().close();
                 } catch (IOException closeException) {
@@ -348,19 +354,23 @@ public final class ClientHandler extends Thread {
             if (session.isDisconnected()) {
                 return;
             }
-            List<Board> memberships = new ArrayList<>();
-            if (session.isPublicMember()) {
-                memberships.add(state.publicBoard());
-            }
-            memberships.addAll(session.privateBoards());
-            for (Board board : memberships) {
-                if (board.members().contains(session)) {
-                    state.leave(session, board);
-                    String eventType = board.isPublicBoard() ? "USER_LEFT" : "GROUP_LEFT";
-                    notifyMembers(board.memberSnapshot(), Protocol.event(memberEvent(eventType, board)));
-                }
-            }
+            removeMembershipsAndNotify();
             state.disconnect(session);
+        }
+    }
+
+    private void removeMembershipsAndNotify() {
+        List<Board> memberships = new ArrayList<>();
+        if (session.isPublicMember()) {
+            memberships.add(state.publicBoard());
+        }
+        memberships.addAll(session.privateBoards());
+        for (Board board : memberships) {
+            if (board.members().contains(session)) {
+                state.leave(session, board);
+                String eventType = board.isPublicBoard() ? "USER_LEFT" : "GROUP_LEFT";
+                notifyMembers(board, board.memberSnapshot(), Protocol.event(memberEvent(eventType, board)));
+            }
         }
     }
 

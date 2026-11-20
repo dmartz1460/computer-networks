@@ -107,7 +107,6 @@ class ServerProtocolTests(unittest.TestCase):
         )
         self.assertEqual(status[1], "OK")
         message_id = status[2]["messageId"]
-        self.assertEqual(self.event(self.alice)["type"], "MESSAGE_POSTED")
         self.assertEqual(self.event(self.bob)["messageId"], message_id)
         self.assertEqual(self.request(self.bob, "MESSAGE_PUBLIC|6|" + message_id)[2]["content"], "Body")
 
@@ -116,6 +115,20 @@ class ServerProtocolTests(unittest.TestCase):
         private_id = status[2]["messageId"]
         self.assertEqual(self.request(self.bob, "USERS_GROUP|9|1")[1], "ERROR")
         self.assertEqual(self.request(self.bob, "MESSAGE_GROUP|10|1|" + private_id)[2]["code"], "NOT_MEMBER")
+
+    def test_disconnect_response_contains_public_board_shape(self):
+        connection = socket.create_connection(("127.0.0.1", self.port), timeout=2)
+        connection.settimeout(2)
+        try:
+            self.assertEqual(self.request(connection, "REGISTER|20|" + encoded("disconnect-user"))[1], "OK")
+            self.assertEqual(self.request(connection, "JOIN_PUBLIC|21")[1], "OK")
+            response = self.request(connection, "DISCONNECT|22")
+            self.assertEqual(response[1], "OK")
+            self.assertEqual(response[2]["board"], "public")
+            self.assertEqual(response[2]["username"], "disconnect-user")
+            self.assertNotIn("disconnect-user", response[2]["users"])
+        finally:
+            connection.close()
 
     def test_duplicate_name_is_rejected(self):
         first = socket.create_connection(("127.0.0.1", self.port), timeout=2)

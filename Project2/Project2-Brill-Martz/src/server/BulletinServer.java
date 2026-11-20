@@ -14,9 +14,12 @@ public final class BulletinServer {
     public static void main(String[] args) throws IOException {
         int port = parsePort(args);
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> closeQuietly(serverSocket)));
-            System.out.println("Bulletin server listening on port " + serverSocket.getLocalPort());
             ServerState state = new ServerState();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                state.closeSessions();
+                closeQuietly(serverSocket);
+            }));
+            System.out.println("Bulletin server listening on port " + serverSocket.getLocalPort());
             while (!serverSocket.isClosed()) {
                 Socket socket = null;
                 try {
