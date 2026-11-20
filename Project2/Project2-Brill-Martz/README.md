@@ -9,10 +9,6 @@ This project is a console bulletin board with a Java TCP server and a Python
 TCP client. The server supports a public board and five private group boards:
 `general`, `sports`, `study`, `gaming`, and `tech`.
 
-The server and client use only their language standard libraries. Communication
-uses TCP sockets and the framing and request/response protocol specified in
-[`../PLAN.md`](../PLAN.md), section 2.
-
 ## Requirements
 
 - JDK 17 or newer
