@@ -23,11 +23,7 @@ Build one console client-server bulletin board that supports both public and pri
       |   |   `-- ... Java source
       |   `-- client/
       |       `-- ... Python source
-      |-- test/
-      |   `-- ... test scripts
-      |-- Makefile
       |-- README.md
-      `-- run_server.sh
   ```
 
 The submission directory name and README name fields must use the two team members' surnames. Do not add package dependencies for networking or replace raw TCP sockets with frameworks.
@@ -220,7 +216,7 @@ Own all files under `src/server/` and server tests.
 6. Implement join snapshots with at most two recent message summaries.
 7. Implement user leave notifications for public and private boards.
 8. Implement Base64 payload encoding and JSON serialization/deserialization manually or with standard-library-compatible small helpers.
-9. Provide server-only smoke tests and automated protocol tests in `test/`.
+9. Development may use server-only smoke tests or automated protocol tests under `test/`; test files are not final submission artifacts.
 10. Add server comments at synchronization boundaries and protocol parsing decisions, but keep method names and variables descriptive.
 
 Avoid editing `src/client/` except to fix a mutually agreed protocol mismatch.
@@ -267,8 +263,8 @@ Avoid editing `src/server/` except to fix a mutually agreed protocol mismatch.
 
 Assign these files exclusively:
 
-- Person A: `src/server/**`, `test/server/**`, `Makefile`, server README section.
-- Person B: `src/client/**`, `test/client/**`, client README section.
+- Person A: `src/server/**` and development server tests, server README section.
+- Person B: `src/client/**` and development client tests, client README section.
 - Both share a review of `README.md`, but only Person A performs initial server/build documentation and only Person B performs initial run/client documentation.
 - Only Person A creates protocol type constants in Java? Avoid duplicate protocol source of truth. Person B should implement the contract from `PLAN.md`, not create its own protocol specification.
 - Both inspect and update `PROJECT2/.../README.md` by separate small patches or at the checkpoint merge.
@@ -288,7 +284,7 @@ Both developers meet for 20-30 minutes.
 - Person A creates server skeleton.
 - Person B creates client skeleton and frame codec.
 - Merge skeleton to a shared branch.
-- Add a placeholder `Makefile` and README build heading.
+- Add concise README build and run heading.
 
 Do not proceed past this checkpoint with incompatible frame or field formats.
 
@@ -298,15 +294,17 @@ Person A:
 
 - Implement server socket, session, boards, in-memory state, public join/leave/post/list/message.
 - Implement private-group join/leave/post/list/message.
-- Add server unit tests for state operations.
+- Development may add server unit tests for state operations. Do not include test files in the final submission.
 
 Person B:
 
 - Implement socket frame transport.
 - Implement command parser and console UI.
 - Implement all public and private commands.
-- Add client parser and payload rendering tests.
-- Mock server socket tests should validate direct-response and event handling.
+- Development may add client parser and payload rendering tests.
+- Development mock server socket tests may validate direct-response and event handling.
+- Do not include test files in the final submission.
+Development tests are not part of the final submission unless the team later explicitly decides otherwise.
 
 There should be no shared-file edits during this phase.
 
@@ -369,7 +367,7 @@ For every coding task:
 
 ### Automated server tests
 
-Person A should add runnable tests in `test/server/` that cover:
+For development, Person A may add runnable tests under `test/server/` that cover:
 
 - Frame encoding and decoding.
 - Public join response and at-most-two-message snapshot.
@@ -385,11 +383,11 @@ Person A should add runnable tests in `test/server/` that cover:
 - Disconnect cleanup from public and private boards.
 - Concurrent public posts preserve unique IDs and do not lose messages.
 
-The server test runner may be a shell script or Python test script that starts Java child processes and uses raw Python sockets. This is only test infrastructure and not a project third-party networking dependency.
+Development tests may be Python scripts that compile or start Java child processes and use raw Python sockets. Tests are not part of the final submission unless the team later explicitly decides otherwise.
 
 ### Automated client tests
 
-Person B should add runnable tests in `test/client/` that cover:
+For development, Person B may add runnable tests under `test/client/` that cover:
 
 - Frame length/header encoding.
 - Base64 and JSON payload round trips.
@@ -426,28 +424,20 @@ Run one server and at least two clients.
 | Malformed command | Client shows clear usage or server sends `INVALID_COMMAND` |
 | Pipe/special characters | Subject/content survives a round trip |
 
-### Test commands
+### Development verification commands
 
-Document and verify:
+Document and verify the direct server commands:
 
 ```text
 cd Project2-<Lastname>-<Partner...>
-javac src/server/*.java
-java -cp src server.BulletinServer --port 5000
+javac -d build/server src/server/*.java
+java -cp build/server server.BulletinServer --port 5000
 python src/client/bulletin_client.py
 ```
 
-If Java package declarations are used, replace plain `javac src/server/*.java` and `java -cp src server.BulletinServer` with the exact Makefile targets. The final Makefile should expose at least:
+The README must include equivalent commands for Windows, macOS, and Linux and explain when `py` or `python` differs.
 
-```text
-make build
-make run-server
-make run-client
-make test
-make clean
-```
-
-The final README must include exact OS-tested commands for Windows and explain if `py` or `python` differs.
+Development tests may be compiled and run only while implementing; remove or exclude them from the final submission directory and zip.
 
 ## 9. Error and Concurrency Checklist
 
@@ -494,10 +484,8 @@ Then include:
 - Protocol summary.
 - Prerequisites.
 - Exact compile/run commands.
-- Makefile commands.
 - Complete console command list.
 - Examples for connecting, joining, posting, private groups, and exit.
-- Test commands.
 - Known issues and how they were handled.
 - Division or contribution notes if the team chooses to include them.
 
@@ -508,9 +496,9 @@ No binaries should be committed or included in the submission zip.
 - Both student names at README top.
 - Source under one submission directory.
 - Server and client source included.
-- Makefile or exact build steps included.
+- Exact cross-platform compile/run steps included.
 - README complete.
-- No `.class`, `__pycache__`, virtual environment, executable binary, or ZIP in source.
+- No `.class`, `__pycache__`, virtual environment, executable binary, development test files, shell launcher, or ZIP in the final source or submission.
 - Server run on non-system port.
 - Public and private flows work in a single server process.
 - Both languages are present and the client/server communicate over TCP.
