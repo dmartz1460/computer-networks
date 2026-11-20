@@ -19,44 +19,38 @@ uses TCP sockets and the framing and request/response protocol specified in
 - Python 3.10 or newer
 - No third-party packages
 
-## Structure
+## Run the server
 
-```text
-Project2-Brill-Martz/
-|-- src/server/       Java server source
-|-- src/client/       Python client source
-|-- test/server/      Server tests
-|-- test/client/      Client tests
-|-- Makefile
-|-- README.md
-`-- run_server.sh
-```
+Open a terminal in this directory, which contains `src/server/`.
 
-## Build and run
-
-From this directory, the Makefile provides:
-
-```text
-make build
-make run-server
-make run-client
-make test
-make clean
-```
-
-On Windows PowerShell:
+### Windows (PowerShell)
 
 ```powershell
-Get-ChildItem src\server\*.java | ForEach-Object { $_.FullName } | Set-Content server_sources.txt
-javac -d build\server @server_sources.txt
-Remove-Item server_sources.txt
+New-Item -ItemType Directory -Force build\server | Out-Null
+javac -d build\server src\server\*.java
 java -cp build\server server.BulletinServer --port 5000
-py src\client\bulletin_client.py
-py -m unittest discover -s test -p "test_*.py"
 ```
 
-The default server port is `5000`. Use `--port <port>` to select another
-non-system port.
+### Windows (Command Prompt)
+
+```bat
+if not exist build\server mkdir build\server
+javac -d build\server src\server\*.java
+java -cp build\server server.BulletinServer --port 5000
+```
+
+### macOS and Linux
+
+```bash
+mkdir -p build/server
+javac -d build/server src/server/*.java
+java -cp build/server server.BulletinServer --port 5000
+```
+
+The server uses port `5000` by default. The port can be changed by replacing
+`5000` with another non-system port in the Java command.
+
+Stop the server with `Ctrl+C`.
 
 ## Client commands
 
@@ -74,14 +68,6 @@ non-system port.
 %groupleave <group-id-or-name>
 %groupmessage <group-id-or-name> <message-id>
 %exit
-```
-
-## Testing
-
-Run all tests with:
-
-```powershell
-py -m unittest discover -s test -p "test_*.py"
 ```
 
 ## Server implementation
