@@ -1,0 +1,18 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Java compiled output
+*.class
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Editor / OS artefacts
+.DS_Store
+Thumbs.db
+*.swp

@@ -131,7 +131,7 @@ Enter username: alice
 ### Client tests
 
 ```powershell
-python src\client\test\client\test_client.py
+python test\client\test_client.py
 ```
 
 Or from the project root:
